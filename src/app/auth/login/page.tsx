@@ -6,7 +6,7 @@ import axios from "axios";
 import { z } from "zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {Input} from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useDispatch } from "react-redux";
 import { setAccessToken } from "@/store/authSlice";
@@ -42,8 +42,12 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/api/v1/auth/login", data);
-      dispatch(setAccessToken(response.data.accessToken));
-      router.push("/dashboard");
+
+      const token = response.data.accessToken;
+      dispatch(setAccessToken(token));
+      localStorage.setItem("accessToken", token);
+
+      router.replace("/dashboard");
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError("root", { message: err.response?.data?.message || "Invalid credentials" });

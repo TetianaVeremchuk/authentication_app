@@ -1,35 +1,41 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { clearAccessToken, selectAuth } from "@/store/authSlice";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-const Navbar = () => {
+export default function Navbar() {
+  const dispatch = useDispatch();
   const router = useRouter();
-  const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const { accessToken } = useSelector(selectAuth);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    setIsLoggedIn(!!token);
-  }, [pathname]);
+    setIsMounted(true);
+  }, []);
 
   const handleLogout = () => {
+    dispatch(clearAccessToken());
     localStorage.removeItem("accessToken");
-    setIsLoggedIn(false);
-    router.push("/");
+
+    // Використовуємо `replace()` для миттєвого перенаправлення на головну
+    router.replace("/");
   };
 
+  if (!isMounted) return null; // Запобігає гідратаційним помилкам
+
   return (
-    <nav className="flex justify-between items-center p-4 shadow-md bg-white">
-      <h1 className="text-xl font-bold">
-        <Link href="/">Auth App</Link>
-      </h1>
-      <div className="flex space-x-4">
-        {isLoggedIn ? (
+    <nav className="w-full bg-gray-800 text-white p-4 flex justify-between items-center">
+      <Link href="/" className="text-xl font-bold">
+        Auth App
+      </Link>
+      <div className="space-x-4">
+        {accessToken ? (
           <button
             onClick={handleLogout}
-            className="px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600 transition"
+            className="bg-red-500 px-4 py-2 rounded transition-colors duration-200 hover:bg-red-600"
           >
             Logout
           </button>
@@ -37,13 +43,13 @@ const Navbar = () => {
           <>
             <Link
               href="/auth/login"
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100 transition"
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded transition-colors duration-200 hover:bg-gray-300"
             >
               Login
             </Link>
             <Link
               href="/auth/register"
-              className="px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 transition"
+              className="bg-blue-500 text-white px-4 py-2 rounded transition-colors duration-200 hover:bg-blue-600"
             >
               Register
             </Link>
@@ -52,6 +58,4 @@ const Navbar = () => {
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}
