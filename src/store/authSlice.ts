@@ -5,23 +5,23 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  accessToken: typeof window !== "undefined" ? localStorage.getItem("accessToken") : null,
+  accessToken: null,
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setAccessToken: (state, action: PayloadAction<string | null>) => {
+    setAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
-      if (action.payload) {
-        localStorage.setItem("accessToken", action.payload);
-      } else {
-        localStorage.removeItem("accessToken");
-      }
+    },
+    clearAccessToken: (state) => {
+      state.accessToken = null;
     },
   },
 });
 
-export const { setAccessToken } = authSlice.actions;
+export const { setAccessToken, clearAccessToken } = authSlice.actions;
 export default authSlice.reducer;
+
+export const selectAuth = (state: { auth: AuthState }) => state.auth;

@@ -4,10 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components/ui/input";
+import {Input} from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+
+interface RegisterFormData {
+  username: string;
+  name: string;
+  password: string;
+  confirmPassword: string;
+}
 
 const schema = z
   .object({
@@ -30,11 +37,11 @@ const Register = () => {
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm({
+  } = useForm<RegisterFormData>({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit: SubmitHandler<RegisterFormData> = async (data) => {
     setLoading(true);
     try {
       await axios.post("http://localhost:5000/api/v1/auth/register", {
@@ -43,8 +50,12 @@ const Register = () => {
         password: data.password,
       });
       router.push("/auth/login");
-    } catch (err: any) {
-      setError("root", { message: err.response?.data?.message || "Registration failed." });
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError("root", { message: err.response?.data?.message || "Registration failed." });
+      } else {
+        setError("root", { message: "An unexpected error occurred" });
+      }
     } finally {
       setLoading(false);
     }
@@ -60,8 +71,20 @@ const Register = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input label="Username" {...register("username")} error={errors.username} />
           <Input label="Name" {...register("name")} error={errors.name} />
-          <Input label="Password" type="password" {...register("password")} error={errors.password} />
-          <Input label="Confirm Password" type="password" {...register("confirmPassword")} error={errors.confirmPassword} />
+          <Input
+            label="Password"
+            type="password"
+            {...register("password")}
+            error={errors.password}
+            showPasswordToggle={true}
+          />
+          <Input
+            label="Confirm Password"
+            type="password"
+            {...register("confirmPassword")}
+            error={errors.confirmPassword}
+            showPasswordToggle={true}
+          />
           <Button type="submit" className="w-full bg-blue-500 text-white" disabled={loading}>
             {loading ? "Registering..." : "Register"}
           </Button>

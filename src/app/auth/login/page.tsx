@@ -4,15 +4,23 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components/ui/input";
+import {Input} from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useDispatch } from "react-redux";
 import { setAccessToken } from "@/store/authSlice";
 
+interface LoginFormData {
+  username: string;
+  password: string;
+}
+
 const schema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Only Latin letters, numbers, and underscores are allowed"),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .regex(/^[a-zA-Z0-9_]+$/, "Only Latin letters, numbers, and underscores are allowed"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -20,25 +28,28 @@ const Login = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm({
+  } = useForm<LoginFormData>({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit: SubmitHandler<LoginFormData> = async (data) => {
     setLoading(true);
     try {
       const response = await axios.post("http://localhost:5000/api/v1/auth/login", data);
       dispatch(setAccessToken(response.data.accessToken));
       router.push("/dashboard");
-    } catch (err: any) {
-      setError("root", { message: err.response?.data?.message || "Invalid credentials" });
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        setError("root", { message: err.response?.data?.message || "Invalid credentials" });
+      } else {
+        setError("root", { message: "An unexpected error occurred" });
+      }
     } finally {
       setLoading(false);
     }
@@ -55,10 +66,10 @@ const Login = () => {
           <Input label="Username" {...register("username")} error={errors.username} />
           <Input
             label="Password"
-            type={showPassword ? "text" : "password"}
+            type="password"
             {...register("password")}
             error={errors.password}
-            showPasswordToggle
+            showPasswordToggle={true}
           />
           <Button type="submit" className="w-full bg-blue-500 text-white" disabled={loading}>
             {loading ? "Logging in..." : "Login"}

@@ -1,15 +1,15 @@
 import { InputHTMLAttributes, forwardRef, useState } from "react";
-import { FieldError, Merge, FieldErrorsImpl } from "react-hook-form";
+import { FieldError } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
-  error?: string | FieldError | Merge<FieldError, FieldErrorsImpl<any>> | undefined;
+  error?: string | FieldError;
   showPasswordToggle?: boolean;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, showPasswordToggle, type, ...props }, ref) => {
+const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ label, error, showPasswordToggle, type = "text", ...props }, ref) => {
     const [showPassword, setShowPassword] = useState(false);
     const inputType = showPasswordToggle ? (showPassword ? "text" : "password") : type;
 
@@ -35,14 +35,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </button>
           )}
         </div>
-        {error && (
-          <p className="text-sm text-red-500">
-            {typeof error === "string" ? error : (error as FieldError)?.message}
-          </p>
-        )}
+        {error && <p className="text-sm text-red-500">{typeof error === "string" ? error : error.message}</p>}
       </div>
     );
   }
 );
 
 Input.displayName = "Input";
+
+export { Input };
